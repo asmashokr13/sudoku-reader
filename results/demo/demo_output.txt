@@ -1,0 +1,81 @@
+====================================================================== 
+INPUT: 9x9 mosaic of handwritten digits (saved to demo_overview.png)
+ground-truth puzzle (30 givens, unique solution), digits marked * are the ones the NN will misread:
+  +---------+---------+---------+
+  | .  1  . | 8  .  . | .  .  . |
+  | .  .  . | .  2* . | .  4  . |
+  | .  .  9 | .  .  6 | 2  .  1 |
+  +---------+---------+---------+
+  | .  .  . | 5  .  . | 1  6  . |
+  | .  9  6 | 2  4  . | .  8  . |
+  | .  .  . | 6  8  1 | .  .  . |
+  +---------+---------+---------+
+  | 4  6  . | .  5  . | 8  .  . |
+  | 8* 3  . | 9  .  . | .  .  5 |
+  | .  2  . | 3  .  . | .  .  7 |
+  +---------+---------+---------+
+
+FIRST READING by the network:
+  +---------+---------+---------+
+  | .  1  . | 8  .  . | .  .  . |
+  | .  .  . | .  4* . | .  4  . |
+  | .  .  9 | .  .  6 | 2  .  1 |
+  +---------+---------+---------+
+  | .  .  . | 5  .  . | 1  6  . |
+  | .  9  6 | 2  4  . | .  8  . |
+  | .  .  . | 6  8  1 | .  .  . |
+  +---------+---------+---------+
+  | 4  6  . | .  5  . | 8  .  . |
+  | 5* 3  . | 9  .  . | .  .  5 |
+  | .  2  . | 3  .  . | .  .  7 |
+  +---------+---------+---------+
+  cell (r2,c5): read 4 (true 2); top-3: 4:0.61, 2:0.34, 7:0.02
+  cell (r8,c1): read 5 (true 8); top-3: 5:0.62, 8:0.37, 7:0.00
+
+====================================================================== 
+PIPELINE (UCS, NN ON)
+  AC-3: domain of cell (row 2, col 5) became empty -> the reading is inconsistent
+  search trace (first expansions: #, cost so far g, heuristic h, corrections):
+    #1   g= 0.000 h= 0.000  []
+    #2   g= 0.512 h= 0.000  [('r8c1', 8)]
+    #3   g= 0.588 h= 0.000  [('r2c5', 2)]
+    #4   g= 0.840 h= 0.000  [('r5c3', 5)]
+  search counters: {'generated': 161, 'expanded': 4, 'pruned': 0, 'goal_tests': 5, 'max_frontier': 157}
+  CSP counters   : {'assignments': 81, 'backtracks': 30, 'consistency_checks': 0, 'fc_prunings': 139, 'ac3_revisions': 8270, 'ac3_prunings': 350, 'csp_calls': 1, 'quick_rejects': 4}
+  RESULT: solved after 2 correction(s), total cost 1.100
+  correction log (cell, read digit, new digit, cost):
+    (r2,c5)  4 -> 2   cost 0.5882
+    (r8,c1)  5 -> 8   cost 0.512
+  solution:
+  +---------+---------+---------+
+  | 2  1  4 | 8  7  9 | 3  5  6 |
+  | 6  7  3 | 1  2  5 | 9  4  8 |
+  | 5  8  9 | 4  3  6 | 2  7  1 |
+  +---------+---------+---------+
+  | 7  4  8 | 5  9  3 | 1  6  2 |
+  | 1  9  6 | 2  4  7 | 5  8  3 |
+  | 3  5  2 | 6  8  1 | 7  9  4 |
+  +---------+---------+---------+
+  | 4  6  1 | 7  5  2 | 8  3  9 |
+  | 8  3  7 | 9  1  4 | 6  2  5 |
+  | 9  2  5 | 3  6  8 | 4  1  7 |
+  +---------+---------+---------+
+  matches the writer's original solution: True
+
+====================================================================== 
+NN-GUIDED CORRECTION OFF (solve the first reading as it is)
+  RESULT: NO SOLUTION: puzzle unreadable (the first reading is not solvable and corrections are switched off). Least confident cells: (r2,c5) read 4 @ 0.61, (r8,c1) read 
+
+====================================================================== 
+SEARCH STRATEGIES (nodes generated / expanded, CSP calls, total cost)
+  ucs     generated    161  expanded      4  CSP calls    1  cost 1.100
+  greedy  generated    115  expanded      2  CSP calls    1  cost 1.100
+  astar   generated    115  expanded      2  CSP calls    1  cost 1.100
+
+====================================================================== 
+CSP PRUNING on the corrected puzzle (row-major order)
+  BT         assignments   3224  backtracks   3173  FC prunings      0  AC-3 prunings    0
+  BT+FC      assignments   1082  backtracks   1031  FC prunings   2796  AC-3 prunings    0
+  BT+FC+AC3  assignments    161  backtracks    110  FC prunings    287  AC-3 prunings  350
+
+Plot saved to /home/claude/sudoku_project/results/demo/demo_overview.png
