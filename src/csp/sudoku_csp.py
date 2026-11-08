@@ -16,7 +16,8 @@ import time
 from collections import deque
 from dataclasses import dataclass, field, asdict
 
-FULL = 0x1FF
+FULL = 0x1FF # Each cell's possible digits are stored in 9 bits (one bit per digit 1..9).
+# 0x1FF is 111111111 in binary, which means all nine digits are still possible
 
 
 def _build_geometry():
@@ -119,12 +120,13 @@ def ac3(dom, counters: Counters):
     while queue:
         i, j = queue.popleft()
         counters.ac3_revisions += 1
-        dj = dom[j]
+        dj = dom[j] # If neighbour j has only ONE possible digit, cell i is not allowed to use it.
         if dj & (dj - 1) == 0 and dom[i] & dj:      # D(j) is a singleton that is in D(i)
             dom[i] &= ~dj
             counters.ac3_prunings += 1
             if dom[i] == 0:
                 return False, i
+# Cell i just lost a digit, so its other neighbours must be checked again
             for k in PEERS[i]:
                 if k != j:
                     queue.append((k, i))
@@ -169,6 +171,7 @@ class _Solver:
                 if vals[i] == 0:
                     return i
             return -1
+        # MRV: choose the empty cell with the FEWEST possible digits,
         best, best_n = -1, 99
         for i in range(81):
             if vals[i] == 0:
@@ -179,6 +182,9 @@ class _Solver:
                         break
         return best
 
+    # Forward Checking (FC): after placing digit d in cell v, remove d from the
+    # possible digits of every neighbour. If a neighbour has no digits left,
+    # this choice is a dead end, so return None right away.
     def _forward(self, dom, v, d):
         bit = 1 << (d - 1)
         nd = dom[:]
@@ -217,6 +223,7 @@ class _Solver:
             else:
                 if self.rec(dom):
                     return True
+# This digit led to a dead end, so undo it (empty the cell) and count one backtrack before trying the next digit.
             self.values[v] = 0
             self.c.backtracks += 1
         return False
