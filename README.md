@@ -15,7 +15,7 @@ mosaic -> blank rule + NN (probabilities) -> AC-3 diagnosis -> Search (UCS / Gre
 python -m venv .venv && source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt                         # versions are pinned
 ```
-Tested with Python 3.12.3 on CPU only (no GPU needed). The network is written in NumPy, so there is no PyTorch dependency.
+Tested with Python 3.12 and 3.13 on CPU only (no GPU needed). The network is written in NumPy, so there is no PyTorch dependency.
 
 ## 2. Exact run commands
 ```
@@ -48,10 +48,10 @@ All randomness comes from `TEAM_SEED` in `config.py` (currently 7). Change it to
 * **Injected misreads**: real MNIST test images that the network gets wrong while the true digit stays in its top-3; all other givens use correctly read images. Hence the number of misreads is exactly controlled.
 
 ## 5. Results (details in `results/tables.md`, plots `results/exp*.png`)
-All numbers are mean over 5 seeds (seed 7, team seed set in `config.py`); see `results/tables.md` for the standard deviations. Main observations:
+All numbers are means over 5 seeds (team seed 7, set in `config.py`); `results/tables.md` also gives the standard deviations. Main observations:
 1. The MLP reaches 97.65 % test accuracy against 92.25 % for logistic regression; temperature scaling (T = 1.307) lowers its ECE from 0.0059 to 0.0043.
-2. A* and UCS always find the same (optimal) cost; A* expands far fewer nodes (e.g. ~714 vs ~13,590 at 4 misreads, 7.6 vs 44.8 at 3 misreads). Greedy expands fewer nodes than UCS but is not optimal, so it recovers fewer exact solutions (59 % vs 72 % at 2 misreads, 38 % vs 49 % at 3).
-3. With a *row-major* variable order FC and AC-3 reduce assignments by large factors (25 givens: ~47,500 -> ~10,900 -> ~7,000). With the MRV order FC and FC+AC-3 are identical, because MRV already exploits the singleton domains AC-3 would create.
+2. A* and UCS always find the same (optimal) cost; A* expands far fewer nodes (about 714 vs 13,590 at 4 misreads, 7.6 vs 44.8 at 3 misreads). Greedy expands fewer nodes than UCS but is not optimal, so it recovers fewer exact solutions (59 % vs 72 % at 2 misreads, 38 % vs 49 % at 3).
+3. With a *row-major* variable order FC and AC-3 reduce assignments by large factors (25 givens: about 47,500 -> 10,900 -> 7,000). With the MRV order FC and FC+AC-3 are identical, because MRV already exploits the singleton domains AC-3 would create.
 4. Recovery is not 100 % even for one misread (82 %): a single wrong digit often leaves a *different* solvable puzzle, and "solvable" is accepted first. The uniqueness goal raises recovery (one misread: 82 % -> 99 %; two: 72 % -> 88 %; three: 49 % -> 86 %).
 5. NN-guided correction clearly beats the alternatives: without correction only 18 % / 2 % / 0 % of the puzzles with 1 / 2 / 3 misreads can be solved at all, and random correction recovers 12 % / 0 % / 0 % of the exact solutions, against 79 % / 71 % / 68 % for the NN-guided search.
 6. Temperature scaling does not change which corrections are chosen, because every cost is a difference of logits divided by the same T; it only rescales the costs (calibration still matters for reading the cost as a probability).
@@ -62,7 +62,11 @@ All numbers are mean over 5 seeds (seed 7, team seed set in `config.py`); see `r
 * The hard-image pool is small (~200 images), so the same hard images recur across puzzles.
 * The MLP is trained for 10 epochs only (97.65 % test accuracy); the logistic-regression baseline stopped at the 100-iteration limit (sklearn convergence warning), which is fine for a baseline but should be mentioned.
 * Experiment 2 caps a run at 300,000 assignments; plain BT with a row-major order hit the cap in 4.0 % of the runs with 25 givens (2 of 50 runs, counted as aborted), so its true mean is higher than reported.
+* Numbers can differ slightly between machines (floating-point differences change which test images are misread); the qualitative findings do not change.
 
 ## 7. Checklist status
-Done in this repository: items 1-10 of the common checklist (code, `make_data.py`, data dictionary, NN vs baseline, search with counters and known-answer test, CSP with switches and counters, `run_demo.py`, README, tests, experiments).
-**Still to be produced by the team:** report (item 11), 10+5 minute presentation (item 12), individual contribution statements and the git log (item 13).
+Items 1-11 of the common checklist are in this repository or delivered with it: code, `make_data.py`, data dictionary, NN versus baseline, search with counters and a known-answer test, CSP with switchable BT / FC / AC-3 and counters, `run_demo.py`, this README, tests (19: 10 normal, 5 edge, 4 impossible), the three experiments and the report (PDF).
+Items 12-13 (presentation and live demo, individual contribution statements, git log) are delivered separately.
+
+## 8. Team
+Asma Shokr (ID 320240092), Mariam Ayoub (ID 320240091).
