@@ -30,14 +30,14 @@ class SearchResult:
         return dict(generated=self.generated, expanded=self.expanded, pruned=self.pruned,
                     goal_tests=self.goal_tests, max_frontier=self.max_frontier)
 
-
+# One search loop supports UCS, Greedy and A* using different priority functions.
 def best_first_search(problem, strategy="ucs", max_expansions=None, trace_limit=0) -> SearchResult:
     if strategy not in ("ucs", "greedy", "astar"):
         raise ValueError(strategy)
     t0 = time.perf_counter()
     tie = itertools.count()
     res = SearchResult(False)
-
+    # UCS uses g, Greedy uses h, and A* uses the sum of g and h.
     def prio(g, h):
         if strategy == "ucs":
             return (g, 0.0)
@@ -54,9 +54,11 @@ def best_first_search(problem, strategy="ucs", max_expansions=None, trace_limit=
     while frontier:
         res.max_frontier = max(res.max_frontier, len(frontier))
         *_, state, g, h = heapq.heappop(frontier)
+        # Skip outdated entries when the state was already reached with a lower cost.
         if g > best_g.get(state, INF):
             continue                                      # stale entry
         res.goal_tests += 1
+        # Test the goal when removing a state from the priority queue.
         if problem.is_goal(state):
             res.found, res.state, res.cost = True, state, g
             path, s = [], state

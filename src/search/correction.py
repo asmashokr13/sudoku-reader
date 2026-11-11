@@ -38,7 +38,7 @@ def build_candidates(grid, probs, alts=2, cells=None):
                          key=lambda t: t[1])
     return cand
 
-
+# Search problem: each state represents a set of corrections made to the original Sudoku reading.
 class CorrectionProblem:
     def __init__(self, grid, probs, max_corrections=3, alts=2, require_unique=False,
                  candidate_cells=None):
@@ -72,7 +72,7 @@ class CorrectionProblem:
     # ---- search interface ----------------------------------------------
     def initial_state(self):
         return ()
-
+    # Generate possible next corrections using alternative digits for uncertain cells.
     def successors(self, state):
         if len(state) >= self.max_corrections:
             return
@@ -82,7 +82,7 @@ class CorrectionProblem:
                 for d, cost in self.cand[c]:
                     a = (c, d)
                     yield a, state + (a,), cost
-
+    # Estimate the minimum additional correction cost needed to resolve existing conflicts.
     def heuristic(self, state):
         _, conflicts = self._info(state)
         if not conflicts:
@@ -98,7 +98,7 @@ class CorrectionProblem:
                 return INF
             h = max(h, m)
         return h
-
+    # Check whether the corrected puzzle has no conflicts and can be solved by the CSP solver.
     def is_goal(self, state):
         g, conflicts = self._info(state)
         self.cache.pop(state, None)
